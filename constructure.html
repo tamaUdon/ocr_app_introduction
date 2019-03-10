@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Introduction: original OCR app</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/marx/2.0.4/marx.css">
+    <link rel="stylesheet" type="text/css" href="http://alexgorbatchev.com/pub/sh/current/styles/shCoreEclipse.css"/>
+    <script type="text/javascript" src="http://alexgorbatchev.com/pub/sh/current/scripts/shCore.js"></script>
+    <script type="text/javascript" src="http://alexgorbatchev.com/pub/sh/current/scripts/shBrushPython.js"></script>
+    <script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+
+<body>
+<main>
+  <h1>設計・仕様</h1>
+    <div>
+    <h4>androidのカメラで画像を撮影</h4>
+        <p>android studioを使い、javaで実装。<br>
+            androidの標準カメラで写真を撮影し、画像をflaskで作った機械学習APIにPOST送信する。<br>
+            画像のExif情報を取得し、回転処理を加える。
+        </p>
+    <h4>flaskで機械学習APIを作成、文字認識</h4>
+        <p>flask(python)で機械学習APIを作成。<br>
+            windowsの英数字フォントデータを加工し、学習させ、重みデータを得る。<br>
+            <!--以下コード-->
+            英数字の混ざったテキストを同時に認識することは難しいと判断("l"と"1","Z"と"2"など)し、<br>
+            英字、数字を別で学習させ、2種類の重みデータを得た。<br>
+            androidアプリで英字のみのテキストか、数字のみかをユーザーに選択してもらう。<br>
+            選択されたボタンに応じて英字/数字の重みデータを読み込む。<br>
+        </p>
+        
+        <pre class="brush:py">
+            #英字選択の場合
+            if weight == 'eng':
+                nlist = alphabet_model.predict(np.array(X))
+                for i, n in enumerate(nlist):
+                    ans = n.argmax()
+                    alphabet_dic = {i:chr(c) for i,c in enumerate(range(ord('A'),ord('Z')+1))}
+                    alphabet_dic.update({i+26:chr(c) for i,c in enumerate(range(ord('a'),ord('z')+1))})
+                res = alphabet_dic.get(ans)
+                
+                if res == None:
+                    result.append(ans)
+
+                else:
+                    result.append(res)
+            
+            #数字選択の場合
+            elif weight == 'num':
+                nlist = numeral_model.predict(np.array(X))
+                for i, n in enumerate(nlist):
+                    ans = n.argmax()
+                    result.append(ans)
+                    
+            return result
+        </pre>
+    <h4>画像処理</h4>
+        <p>ぼかし、二値化、回転(画像のゆがみ補正)をOpenCVで実装。<br>
+            これらの処理を通すことで、後の文字認識の精度を上げる。<br>
+        </p>
+        <img src="./image/num_sample.jpg" alt="" width="300" hight="200">
+        <p>↓(元画像)</p>
+        <img src="./image/thresh_sample.png" alt="" width="300" hight="200">
+        <p>↓(二値化し、ノイズを緩和した)</p>
+        <img src="./image/rectangle_sample.png" alt="" width="300" hight="200">
+        <p>(二値化画像からテキストの外接矩形を検出し、元画像に書き出したもの)</p>
+
+        
+
+    </div>
+  <a href="index.html"><button>戻る</button></a>
+</main>
+</body>
+</html>
