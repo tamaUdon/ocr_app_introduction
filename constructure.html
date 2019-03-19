@@ -12,10 +12,10 @@
 
 <body>
 <main>
-  <h1>設計・仕様</h1>
+  <h1>設計・仕様 (2019/03/19更新)</h1>
     <div>
         <h4>処理フロー</h4>
-        <img src="./image/shiyou.jpg" alt="" width="300" hight="200">
+        <img src="./image/flow.png" alt="" width="300" hight="200">
         
     <h4>１．androidのカメラで画像を撮影</h4>
         <p>android studioを使い、javaで実装。<br>
@@ -70,6 +70,7 @@
             実機テストでは、画像のゆがみや明暗の差によるテキスト誤検出により認識精度が下がることが認められた。<br>
             後述の画像処理に重点を置き、より正しくテキストを検出させることで、実機テストでもこの認識精度に近づけることにした。
         </p>
+        <br>
     <h4>３．画像処理</h4>
         <p>ぼかし、二値化、回転(画像のゆがみ補正)をOpenCVで実装。<br>
             これらの処理を通すことで、後の文字認識の精度を上げる。<br>
@@ -80,16 +81,57 @@
         <p>↓(二値化し、ノイズを緩和した)</p>
         <img src="./image/rectangle_sample.png" alt="" width="300" hight="200">
         <p>(二値化画像からテキストの外接矩形を検出し、元画像に書き出したもの)</p>
-
+        
         <pre class="brush:py">
-        #画像回転コード
+        #グレイスケール化、平滑化、二値化
+        gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY) 
+        blur = cv2.GaussianBlur(gray, (5, 5), 0) 
+        thresh = cv2.adaptiveThreshold(blur,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 1, 9, 4)
         </pre>
-        <p>小さすぎる・大きすぎる矩形の処理を飛ばし、左上から順に矩形を並べ替え、認識させる。<br><br>
+        <p>
+            adaptive Threshold(二値化処理)のBlock Size, C(減算定数)は試行錯誤して決定した。<br>
+            小さすぎる・大きすぎる矩形の処理を飛ばし、左上から順に矩形を並べ替え、認識させる。<br><br>
         </p>
+        <p>次に、画像のゆがみを補正するためアフィン変換する。<br>
+        横向きの画像や天地逆の画像は、android側でExif情報を読み取って補正できるが、<br>
+        撮影した文字列自体が斜めに傾いている場合は、予測精度が落ちてしまう。<br>
+        そのため、検出した外接矩形の座標から文字列の傾きを算出し、アフィン変換で回転補正をかけた。<br>
+        結果、予測間違いを減らすことに成功した。
+        </p>
+        <pre class="brush:py">
+        #外接矩形の底辺の中点座標を取得
+        #テキストが複数行にわたる場合は考慮しない
+        N = []
+        M = []
+        for i, r in enumerate(rects):
+            index, x, y, w, h, lower_left_y, right_corner = r
+            N.append(x + w/2)
+            M.append(lower_left_y)
+
+        #最小二乗法で直線の傾きを取得
+        #a=傾き,b=切片
+        A = np.array([N,np.ones(len(N))])
+        A = A.T
+        a,b = np.linalg.lstsq(A,M)[0]
+
+        #画像回転
+        rows,cols = thresh.shape
+        d = math.degrees(a)
+        M = cv2.getRotationMatrix2D((cols/2,rows/2),d,1)
+        thresh = cv2.warpAffine(thresh,M,(cols,rows))
+        </pre>
+        <img src="./image/original-th.png" alt="" width="300" hight="200">
+        <p>文字列が傾いた元画像を二値化した画像</p>
+        <p>(外接矩形の底辺の中点のx座標[124.5, 193.0, 278.0], y座標[198, 185, 161],傾きa = -0.24267534773601693(単位:ラジアン))</p>
+        <img src="./image/rotate.png" alt="" width="300" hight="200">
+        <p>回転処理をかけた画像</p>
+        <img src="./image/snap.png" alt="" width="300" hight="200">
+        <p>実行結果</p>
+        <p></p>
         
         <h4>モデル</h4>
         <p>
-        モデルはkerasを使用しCNNを作成。
+        モデルはkerasでCNNを作成。
         </p>
         <pre class="brush:py">
         #英字の認識モデル
@@ -105,7 +147,11 @@
             model.add(Dense(784, activation='relu'))
             model.add(Dense(52, activation='softmax'))
         </pre>
-        <p></p>
+        <p>基本に忠実に作った。</p>
+        <p>参考:</p> 
+        <li><a href="http://cs230.stanford.edu/section/">http://cs230.stanford.edu/section/</a></li>
+        <li><a href = "https://github.com/kujirahand/book-python-scraping">https://github.com/kujirahand/book-python-scraping</a></li><br>
+        
     </div>
   <a href="index.html"><button>戻る</button></a>
 </main>
