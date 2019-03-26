@@ -93,15 +93,41 @@
             小さすぎる・大きすぎる矩形の処理を飛ばし、左上から順に矩形を並べ替え、認識させる。<br><br>
         </p>
         
+        <h5>クラスタリング処理の前に、AKAZEによる特徴点検出を行う。</h5><br>
+        <p>テキスト一文字につき中点一つを取って、クラスタリングを行ったが、精度が思うように上がらなかった。<br>
+            座標データが少なすぎることが原因と思われたので、AKAZEで特徴点座標を多く得ることにする。<br>
+        </p>
+        <img src="./image/akaze.png" alt="" width="300" hight="200">
+        <p>
+        特徴点を画像上にプロッティングしたもの。<br>
+        これだけ座標があればうまくクラスタリングできそうだ。<br>
+        </p>
+        <pre class="brush:py">
+        #AKAZEで特徴点検出
+        akaze = cv2.AKAZE_create()
+        keypoints = akaze.detect(thresh)
+        for marker in keypoints:
+            #akaze_im = cv2.drawMarker(im, tuple(int(i) for i in marker.pt),color=(0, 255, 0))
+            kp_array = np.concatenate([kp_array, np.array([marker.pt])], 0)
+        #VBGMM
+        bgmm = BayesianGaussianMixture(n_components=3, 
+                                       weight_concentration_prior_type='dirichlet_process')
+        bgmm = bgmm.fit(kp_array)
+        cluster = bgmm.predict(kp_array)
+        </pre>
+        <p>
+        精度はチューニング次第といったところか。
+        </p>
         <h5>次に、VBGMMによるクラスタリングを行う。</h5>
-        <p>複数行にわたる文字列(改行あり文字列)を正しく認識させるため、<br>
+        <p>複数行にわたる文字列(改行あり文字列)の改行、空白を認識させるため、<br>
             VBGMM(Variational Bayesian Gaussian Mixture)によるクラスタリング処理を実装する。<br><br>
             
             #プロッティングしたグラフ挿入<br><br>
             
             ラベルデータやクラスタ数が不明でもクラスタリングが可能なためVBGMMを選択した。<br>
-            複数行を認識させ、後述の処理で一行ずつ傾きを算出し、画像のゆがみを補正する。
+            複数行を認識させ、後述の処理で一行ずつ傾きを算出し、画像のゆがみを補正する。<br>  
         </p>
+        
         
         <h5>次に、画像のゆがみを補正するため傾いている角度だけ回転させる。</h5>
         <p>
