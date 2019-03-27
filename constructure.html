@@ -104,6 +104,9 @@
         </p>
         <pre class="brush:py">
         #AKAZEで特徴点検出
+        
+        kp_array = np.empty((0,2), int)
+        
         akaze = cv2.AKAZE_create()
         keypoints = akaze.detect(thresh)
         for marker in keypoints:
@@ -114,9 +117,11 @@
                                        weight_concentration_prior_type='dirichlet_process')
         bgmm = bgmm.fit(kp_array)
         cluster = bgmm.predict(kp_array)
+        
         </pre>
         <p>
-        精度はチューニング次第といったところか。
+        参考url:<a href ="https://scikit-learn.org/stable/modules/generated/sklearn.mixture.BayesianGaussianMixture.html">https://scikit-learn.org/stable/modules/generated/sklearn.mixture.BayesianGaussianMixture.html</a><br>
+        精度はチューニング次第といったところか。ここでは最大3つのクラスタになるようクラスタリングする。<br>
         </p>
         <h5>次に、VBGMMによるクラスタリングを行う。</h5>
         <p>複数行にわたる文字列(改行あり文字列)の改行、空白を認識させるため、<br>
@@ -133,39 +138,52 @@
         <p>
         横向きの画像や天地逆の画像は、android側でExif情報を読み取って補正できるが、<br>
         撮影した文字列自体が斜めに傾いている場合は、予測精度が落ちてしまう。<br>
-        そのため、検出した外接矩形の座標から文字列の傾きを算出し、アフィン変換で回転補正をかけた。<br>
+        そのため、検出した特徴点の座標から文字列の傾きを算出し、アフィン変換で回転補正をかけた。<br>
         結果、予測間違いを減らすことに成功した。
         </p>
         <pre class="brush:py">
-        #外接矩形の底辺の中点座標を取得
-        #テキストが複数行にわたる場合は考慮しない
-        N = []
-        M = []
-        for i, r in enumerate(rects):
-            index, x, y, w, h, lower_left_y, right_corner = r
-            N.append(x + w/2)
-            M.append(lower_left_y)
-
-        #最小二乗法で直線の傾きを取得
-        #a=傾き,b=切片
-        A = np.array([N,np.ones(len(N))])
-        A = A.T
-        a,b = np.linalg.lstsq(A,M)[0]
-
+        
+    #画像回転
+    def _img_rotate(self,labeled_Pt_x,labeled_Pt_y,im):
+        
+        avg_gradient = 0
+        #特徴点のx,y座標を取り出す
+        for i in range(len(labeled_Pt_x)):
+            kp_x = np.array(labeled_Pt_x[i])
+            kp_y = np.array(labeled_Pt_y[i])
+            
+            #最小二乗法で直線の傾きを取得する
+            #a=傾き,b=切片
+            #それぞれのクラスタの傾きの平均値を求める
+            ones = np.array([kp_x,np.ones(len(kp_x))])
+            ones = ones.T
+            a,b = np.linalg.lstsq(ones,kp_y)[0]
+            print(a)
+            avg_gradient += a
+        avg_gradient = avg_gradient / len(labeled_Pt_x)
+        print(avg_gradient)
+        
         #画像回転
+        global thresh
         rows,cols = thresh.shape
-        d = math.degrees(a)
+        d = math.degrees(avg_gradient)
+        print(d)
         M = cv2.getRotationMatrix2D((cols/2,rows/2),d,1)
         thresh = cv2.warpAffine(thresh,M,(cols,rows))
+        cv2.imwrite("C:/Users/sakur/files/Web_ocr_app/init/uploads/rotate.png", thresh)
+        
         </pre>
         <img src="./image/original-th.png" alt="" width="300" hight="200">
         <p>文字列が傾いた元画像を二値化した画像</p>
-        <p>(外接矩形の底辺の中点のx座標[124.5, 193.0, 278.0], y座標[198, 185, 161],傾きa = -0.24267534773601693(単位:ラジアン))</p>
+        <p>それぞれのクラスタから算出した傾きa = -0.3416542173583762,-0.2675808205604371,-15.331251696760448(単位:ラジアン))</p>
         <img src="./image/rotate.png" alt="" width="300" hight="200">
         <p>回転処理をかけた画像</p>
-        <img src="./image/snap.png" alt="" width="300" hight="200">
-        <p>実行結果</p>
-        <p></p>
+        <!--<img src="./image/snap.png" alt="" width="300" hight="200">-->
+        <!--<p>実行結果</p>-->
+        <p>回転処理の前にクラスタリング処理をはさむことで、<br>
+            文字列が複数行にわたる画像も回転できるようになった。<br>
+            ただし精度はあまり良いとはいえないため、改善の余地はありそうだ。<br>
+        </p>
         
         <h4>モデル</h4>
         <p>
