@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Introduction: original OCR app</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/marx/2.0.4/marx.css">
+    <link rel="stylesheet" type="text/css" href="http://alexgorbatchev.com/pub/sh/current/styles/shCoreEclipse.css"/>
+    <script type="text/javascript" src="http://alexgorbatchev.com/pub/sh/current/scripts/shCore.js"></script>
+    <script type="text/javascript" src="http://alexgorbatchev.com/pub/sh/current/scripts/shBrushPython.js"></script>
+    <script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+
+<body>
+<main>
+    <br>
+        <hr>
+    <h4>2019/04/03</h4>
+    <p>予測結果が改善した。<br>
+    関数に与える引数の順序が間違っていただけだった。ひどい凡ミスだ。<br>
+    </p>
+    <img src="image/snap_pre.png" alt="" width="300" hight="200"><br>
+    <p>文字に対する予測値の最大値が0.6以下の場合、空白を入れるようにした。<br>
+        "i"と"l"の予測精度が低いのが課題。<br>
+        あとは大文字と小文字の識別、英数字交じりの文字列を認識できるようにしようと思う。<br>
+        それとコードの整理もしなくては。明日はクラス分け、ファイル分け、関数名のリファクターをする。<br>
+    </p>
+    
+    <a href="log_index.html"><button>戻る</button></a>
+</main>
+</body>
+</html>
