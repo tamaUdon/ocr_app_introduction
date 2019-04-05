@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Introduction: original OCR app</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/marx/2.0.4/marx.css">
+    <link rel="stylesheet" type="text/css" href="http://alexgorbatchev.com/pub/sh/current/styles/shCoreEclipse.css"/>
+    <script type="text/javascript" src="http://alexgorbatchev.com/pub/sh/current/scripts/shCore.js"></script>
+    <script type="text/javascript" src="http://alexgorbatchev.com/pub/sh/current/scripts/shBrushPython.js"></script>
+    <script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+
+<body>
+<main>
+    <br>
+        <hr>
+    <h4>2019/04/05</h4>
+    <p>
+        英数字を同時認識させるようにプログラムを書き換えてみた。<br>
+        英字はうまく認識しているようだが、数字の予測値が軒並み低く、精度が悪い。<br>
+        単語単位で画像を切り取った際、小さい文字がつぶれてしまうのが原因かと思い、拡大処理をかけてみたが、
+        あいかわらず数字の認識精度は悪い (予測値がどの数字も0.1台) うえに、i, j, l, 1などは認識できない。<br>
+        縦に細長い文字は、横の文字との間隔が狭いため、うまく外接矩形を認識できないようだ。<br><br>
+        <img src="image/hajime.png" alt="" width="100" height="100"><br>
+        ↑こういう画像があったとして、外接矩形認識して一文字ずつ切り取ると、<br>
+        <img src="image/j.png" alt="" width="50" height="50"><br>
+        ↑ "j" 左隣のaが混じってしまい誤認識の原因になっている。<br>
+        <img src="image/i.png" alt="" width="50" height="50"><br>
+        ↑ "i" の上の・部分だけ取得してしまっている。<br>
+        <br>
+        どうすればこの認識精度を上げられるかわからないので、いったん大文字小文字識別など別の課題に取り組もうと思う。
+        認識精度、誤検出、背景除去、文字列拡大など課題は多い。
+        課題を明確にしてから、小分けにして取り組もうと思う。<br>
+    </p>
+    
+    <a href="log_index.html"><button>戻る</button></a>
+</main>
+</body>
+</html>
