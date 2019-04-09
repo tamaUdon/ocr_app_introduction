@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Introduction: original OCR app</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/marx/2.0.4/marx.css">
+    <link rel="stylesheet" type="text/css" href="http://alexgorbatchev.com/pub/sh/current/styles/shCoreEclipse.css"/>
+    <script type="text/javascript" src="http://alexgorbatchev.com/pub/sh/current/scripts/shCore.js"></script>
+    <script type="text/javascript" src="http://alexgorbatchev.com/pub/sh/current/scripts/shBrushPython.js"></script>
+    <script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+
+<body>
+<main>
+    <br>
+        <hr>
+        <h4>2019/04/09</h4>
+        <p>"j" の認識に悩んでいた。<br><br>
+            文字間の幅が固定ピッチならば文字分割はまだ容易だが、<br>
+            フォントによってはjの下側の曲線部分が左側の文字にかぶってしまい、誤検出・誤認識の原因となっていた。<br>
+            調べてみると、文字区切りではなく、単語区切りで "Word Recognition" したり、<br>
+            単語と辞書DBを照合させて精度向上を図る例がいくつか見つかった。<br>
+            私の技術力では完全な文字分割や単語認識は難しそうなので、予測結果をBingのスペルチェックAPIに投げて補正することにした。<br>
+            また、輝度値ヒストグラムによる文字検出も試してみようと思う。<br>
+            文字間のピッチが一定でない場合やピッチが狭すぎて文字を検出できない場合に対処できるかもしれない。<br>
+            
+        
+    <a href="log_index.html"><button>戻る</button></a>
+</main>
+</body>
+</html>

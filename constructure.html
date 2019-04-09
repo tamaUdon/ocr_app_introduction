@@ -179,7 +179,17 @@
         <p>回転処理の前にクラスタリング処理をはさむことで、<br>
             文字列が複数行にわたる画像も回転できるようになった。<br><br>
         </p>
+        <h4>空白挿入</h4>
+        <p>単語区切りで真っ黒な画像を挿入し認識させる。<br>
+        予測値が英数字ともに0.6以下のものを空白として処理する。
+        </p>
+        <pre class="brush:py">
+        breakline = np.zeros((28, 28))
+        breakline = breakline.reshape(28, 28, 1)
+        breakline = breakline.astype("float32") / 255
         
+        letters_list.append(breakline)
+        </pre>
         <h4>モデル</h4>
         <p>
         モデルはkerasでCNNを作成。
