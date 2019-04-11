@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Introduction: original OCR app</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/marx/2.0.4/marx.css">
+    <link rel="stylesheet" type="text/css" href="http://alexgorbatchev.com/pub/sh/current/styles/shCoreEclipse.css"/>
+    <script type="text/javascript" src="http://alexgorbatchev.com/pub/sh/current/scripts/shCore.js"></script>
+    <script type="text/javascript" src="http://alexgorbatchev.com/pub/sh/current/scripts/shBrushPython.js"></script>
+    <script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+
+<body>
+<main>
+    <br>
+        <hr>
+        <h4>2019/04/11</h4><br>
+        <p>BGR値によるヒストグラムを作成した。<br>
+            <img src="image/Building.png" width=150 height=100><br>
+            ↑　この画像を、<br>
+            <img src="image/building_hist.png" width=300 height=200><br>
+            ↑ x軸に沿ってヒストグラム化したもの。<br> <br>
+            "i" と "l" が案外はっきり分けられたので、文字間に数ピクセルの空白を挟む処理ができれば
+            その後の外接矩形をうまくとれるかなと思った。<br>
+            …が、iとlがうまく取得できない原因はfindContoursの際にwidthが小さすぎるものをはじいていたからで、
+            字間は全然関係なかったらしく、ヒストグラム化関数はせっかく作ったもののお蔵入りになってしまった…。<br>
+            勉強になったから良しとするか…。<br>
+            目的を定めるのが苦手らしく、寄り道してばかりになってしまっている。<br><br>
+            1. "i" の予測精度を高める<br>
+            2. BingのスペルチェックAPIに投げる<br>
+            3. 背景除去<br>
+            4. webアプリ化<br><br>
+            あたりをやれば少しは形になるだろうか。<br>
+            あと1ヶ月くらいで完成させたいので予定を立てて挑もうと思う。<br><br>
+            ↓お蔵入りになったヒストグラム化関数のコード。
+            
+        </p> 
+        
+        <pre class="brush:py">
+        def histgram(im, im_width, im_height):
+            histgram = []
+            
+            for i in range(width):
+                    px = img[0:im_height, i]
+                    #print("px"), print(px)
+                    #白pxがあった場合に1をreturn
+                    hist_n = [1 for x in px if (x == [255, 255, 255]).all()] 
+                    histgram.append(len(hist_n))
+                #グラフ表示   
+                plt.bar(range(im_width), histgram, width=1.0)
+                plt.ylim(0, im_height)
+                plt.show()
+        </pre>
+        
+    <a href="log_index.html"><button>戻る</button></a>
+</main>
+</body>
+</html>
