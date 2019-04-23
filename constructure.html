@@ -28,10 +28,6 @@
             windowsの英数字フォントデータを加工し、学習させ、重みデータを得る。<br>
             英数字の混ざったテキストを同時に認識することは難しいと判断("l"と"1","Z"と"2"など)し、<br>
             英字、数字を別モデルで学習させ、2種類の重みデータを得た。<br></p>
-            
-        <pre class="brush:py">
-        #重みデータを作るコード
-        </pre>
         <p>
             androidアプリで英字のみのテキストか、数字のみかをユーザーに選択してもらう。<br>
             選択されたボタンに応じて英字/数字の重みデータを読み込む。<br>
@@ -64,9 +60,6 @@
         </pre>
         <p>
             学習時の認識精度は89.5%であった。<br><br>
-            フォントから切り取った学習用画像データを確認したところ、"i" の上部 "・" の部分のみが<br>
-            認識されており、この誤認識画像が正答率を下げているようだ。<br>
-            今回はプログラムの完成を目標としており、高い認識精度は求めない。<br>
             実機テストでは、画像のゆがみや明暗の差によるテキスト誤検出により認識精度が下がることが認められた。<br>
             後述の画像処理に重点を置き、より正しくテキストを検出させることで、実機テストでもこの認識精度に近づけることにした。
         </p>
@@ -179,6 +172,74 @@
         <p>回転処理の前にクラスタリング処理をはさむことで、<br>
             文字列が複数行にわたる画像も回転できるようになった。<br><br>
         </p>
+        
+        <h4>単語単位で矩形検出</h4>
+        <p>次に、矩形認識処理に入る。<br>
+        まず、単語単位で矩形を検出する。モルフォロジー処理 (dilation) をかけ、隣接した文字群をひとつの塊として矩形認識させる。<br>
+        <img src="./image/dilate.png" alt="" width="300" hight="200"><br>
+        ↑ dilation処理をかけた画像<br>
+        <img src="./image/blob.png" alt="" width="300" hight="200"><br>
+        ↑ dilation処理をかけた画像に矩形認識を施した画像<br>
+        </p>
+        <h4>一文字ずつ抽出する</h4>
+        <p>単語単位で1文字ずつ抽出し、語尾に空白挿入処理 (後述) をする。</p>
+        <img src="./image/i_word_company.png" alt="" width="150" hight="150"><br>
+        
+
+        <h4>"i" の分割問題</h4>
+        <p>"i" を矩形認識する際に、上部と下部に分かれて認識されていしまう問題に対処するため、<br>
+        矩形認識後、2つの矩形を結合させる処理をする。<br></p>
+        <pre class="brush:py">
+       
+        def _get_integrate_rectangle(corners): # corners => 一文字ごとの矩形頂点
+            x_region = []
+            del_pt = []
+            pt_list = _tuple_to_list(corners)  
+
+            for i,r in enumerate(pt_list):  # 一文字ずつ取り出す
+                md = None
+                index, x, y, w, h, lower_left_y, right_corner = r
+                x_region.append(x+w/2)
+
+                #1つ前の中点とx軸がかさなっていればつなぐ
+                if i > 0:
+                    md = x_region[i-1] # 1文字前の中点
+                    if x < md < right_corner:
+                        del_pt.append(i)
+
+            if del_pt:
+                for dl in reversed(del_pt): 
+                    print("===頂点変更===")
+                    pt_list[dl][1] = max(pt_list[dl-1][1], pt_list[dl][1]) # x
+                    pt_list[dl][3] = max(pt_list[dl-1][3], pt_list[dl][3]) # w
+                    pt_list[dl][6] = pt_list[dl][1] + pt_list[dl][3] # x+w right_corner
+                    pt_list[dl][2] = min(pt_list[dl-1][2], pt_list[dl][2]) # y
+                    pt_list[dl][5] = max(pt_list[dl-1][5], pt_list[dl][5]) # lower_left_y
+                    pt_list[dl][4] = pt_list[dl][5] - pt_list[dl][2] # h
+
+                #重なっている一つ前の矩形をcornersから全削除
+                del pt_list[dl-1]
+                tuple(pt_list)
+
+            return pt_list
+            
+            #　tupleをリストにキャスト
+            def _tuple_to_list(corners):
+                l = []
+                for i in corners:
+                    t_list = list(i)
+                    l.append(t_list)
+                return l
+                
+        </pre>
+        <p>
+            <img src="./image/i_top.png" alt="" width="50" hight="50">
+            <img src="./image/i_bottom.png" alt="" width="50" hight="50"><br>
+            ↑ 別矩形として検出された "i" の画像<br>
+            <img src="./image/i.png" alt="" width="50" hight="50"><br>
+            ↑ 矩形を結合した "i" の画像<br>
+</p>
+        
         <h4>空白挿入</h4>
         <p>単語区切りで真っ黒な画像を挿入し認識させる。<br>
         予測値が英数字ともに0.6以下のものを空白として処理する。
@@ -189,6 +250,52 @@
         breakline = breakline.astype("float32") / 255
         
         letters_list.append(breakline)
+        </pre><br>
+        
+        <h4>予測</h4>
+        <p>一文字ずつ予測器にかけ、最もprobailityの大きい文字を採用する。<br>
+        改善点としては、最大値だけでなく、2番目、3番目に大きい文字を取得し、<br>それぞれ後述のAPIに通してscoreの高いものを採用するなどできるかもしれない。
+        </p>
+        
+        <h4>APIによる予測修正</h4>
+        <p>このまでは予測結果が芳しくないので、Microsoft Azure の　Bing SpellCheck API を使用し、予測結果を修正する。<br>
+            チュートリアルに沿って設定した。<br></p>
+        <pre class="brush:py">
+        
+        spell_checked_dict = _get_spellchecked_txt(txt) # txt => カンマで単語区切り済みの予測結果
+        
+        for d in spell_checked_dict['flaggedTokens']:
+            token = d['token']
+            suggestions = d['suggestions']
+            
+            for s in suggestions: 
+                sug = s['suggestion']
+                #書き換え
+                result_text = result_text.replace(token, sug, 1)
+                
+        #result_text = result_text.replace(',', ' ') # カンマ区切りを空白区切りにする
+        print(result_text)
+        
+        # SpellCheck, return Class dict
+        def _get_spellchecked_txt(txt): 
+            api_key = "xxxxxxxxxx"
+            res_text = txt
+            endpoint = "https://api.cognitive.microsoft.com/bing/v7.0/SpellCheck"
+
+            data = {'text': res_text}
+
+            params = {
+                    'mkt':'en-us',
+                    'mode':'proof'
+                    }
+
+            headers = {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Ocp-Apim-Subscription-Key': api_key,
+                    }
+            response = requests.post(endpoint, headers=headers, params=params, data=data)
+            spell_checked_dict = response.json()
+            return spell_checked_dict
         </pre>
         <h4>モデル</h4>
         <p>
@@ -208,10 +315,11 @@
             model.add(Dense(784, activation='relu'))
             model.add(Dense(52, activation='softmax'))
         </pre>
-        <p>基本に忠実に作った。</p>
+        <br>
         <p>参考:</p> 
         <li><a href="http://cs230.stanford.edu/section/">http://cs230.stanford.edu/section/</a></li>
-        <li><a href = "https://github.com/kujirahand/book-python-scraping">https://github.com/kujirahand/book-python-scraping</a></li><br>
+        <li><a href = "https://github.com/kujirahand/book-python-scraping">https://github.com/kujirahand/book-python-scraping</a></li>
+        <li><a href = "https://mediadrive.jp/technology/techocr05.html">https://mediadrive.jp/technology/techocr05.html</a></li><br>
         
     </div>
   <a href="index.html"><button>戻る</button></a>
