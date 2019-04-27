@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Introduction: original OCR app</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/marx/2.0.4/marx.css">
+    <link rel="stylesheet" type="text/css" href="http://alexgorbatchev.com/pub/sh/current/styles/shCoreEclipse.css"/>
+    <script type="text/javascript" src="http://alexgorbatchev.com/pub/sh/current/scripts/shCore.js"></script>
+    <script type="text/javascript" src="http://alexgorbatchev.com/pub/sh/current/scripts/shBrushPython.js"></script>
+    <script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+
+<body>
+<main>
+    <br>
+    <hr>
+    <h4>2019/04/27</h4>
+    <p>
+    mozillaの<a href=https://developer.mozilla.org/ja/docs/DOM/Using_the_Camera_API>Camera API</a>を使用し、chrome、firefox (androidに限る) 上でデバイスのカメラを起動し、撮影した写真をアップロードする機能を付けた。<br>
+    実機 (Sony SO-01J) のカメラでOCRシステムを動かしてみたところ、二値化がうまくいっていないようだった。<br>
+        今までのデバッグでは背景が真っ白な画像ばかりを用いていたが、実際の写真を使うと、ノイズ (スプリットノイズというらしい) が目立ち、文字がかすれたり、途切れたりしていたため、二値化、dilation処理のチューニンを施し、オープニング処理を加え、メディアンフィルタでスプリットノイズを除去した。<br>
+        しかし、背景が真っ白の理想的な画像を用いていた時はうまく単語単位で矩形を切り出してくれたのが、デバイスで撮影した写真だとうまくいかない。<br>
+        dilationの問題なのだろうか。明日は原因究明しつつ他の方法を探る予定だ。<br>
+    </p>
+            
+        
+    <a href="log_index.html"><button>戻る</button></a>
+</main>
+</body>
+</html>
