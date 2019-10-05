@@ -41,7 +41,7 @@
     
     <div>
         <h4 id="flow">処理フロー</h4>
-            <img src="./image/flow.png" alt="" width="300" hight="200"><br>
+            <img src="./stylesheet/image/flow.png" alt="" width="300" hight="200"><br>
         
         <h4 id="camera">１．androidのカメラで画像を撮影</h4>
             <p>android studioを使い、javaで実装。<br>
@@ -93,11 +93,11 @@
         <h4 id="imgprocess">３．画像処理</h4>
             <h5 id="thresh">(1) ぼかし、二値化、回転(画像のゆがみ補正)をOpenCVで実装。</h5>
                 <p>これらの処理を通すことで、後の文字認識の精度を上げる。</p><br>
-            <img src="./image/num_sample.jpg" alt="" width="300" hight="200">
+            <img src="./stylesheet/image/num_sample.jpg" alt="" width="300" hight="200">
             <p>↓(元画像)</p>
-            <img src="./image/thresh_sample.png" alt="" width="300" hight="200">
+            <img src="./stylesheet/image/thresh_sample.png" alt="" width="300" hight="200">
             <p>↓(二値化し、ノイズを緩和した)</p>
-            <img src="./image/rectangle_sample.png" alt="" width="300" hight="200">
+            <img src="./stylesheet/image/rectangle_sample.png" alt="" width="300" hight="200">
             <p>(二値化画像からテキストの外接矩形を検出し、元画像に書き出したもの)</p>
 
             <pre class="brush:py">
@@ -115,7 +115,7 @@
             <p>テキスト一文字につき中点一つを取って、クラスタリングを行ったが、精度が思うように上がらなかった。<br>
                 座標データが少なすぎることが原因と思われたので、AKAZEで特徴点座標を多く得ることにする。<br>
             </p>
-            <img src="./image/akaze.png" alt="" width="300" hight="200">
+            <img src="./stylesheet/image/akaze.png" alt="" width="300" hight="200">
             <p>
             特徴点を画像上にプロッティングしたもの。<br>
             これだけ座標があればうまくクラスタリングできそうだ。<br>
@@ -183,10 +183,10 @@
             thresh = cv2.warpAffine(thresh,M,(cols,rows))
 
             </pre>
-            <img src="./image/original-th.png" alt="" width="300" hight="200">
+            <img src="./stylesheet/image/original-th.png" alt="" width="300" hight="200">
             <p>文字列が傾いた元画像を二値化した画像</p>
             <p>それぞれのクラスタから算出した傾きa1 = -0.3416542173583762, a2=-0.2675808205604371, a3 = -15.331251696760448(単位:ラジアン,n_components = 3 の場合)</p>
-            <img src="./image/rotate.png" alt="" width="300" hight="200">
+            <img src="./stylesheet/image/rotate.png" alt="" width="300" hight="200">
             <p>回転処理をかけた画像</p>
             <!--<img src="./image/snap.png" alt="" width="300" hight="200">-->
             <!--<p>実行結果</p>-->
@@ -197,16 +197,16 @@
             <h4 id="rectangle">４. 単語単位で矩形検出</h4>
             <p>次に、矩形認識処理に入る。<br>
             まず、単語単位で矩形を検出する。モルフォロジー処理 (dilation) をかけ、隣接した文字群をひとつの塊として矩形認識させる。<br>
-            <img src="./image/dilate.png" alt="" width="300" hight="200"><br>
+            <img src="./stylesheet/image/dilate.png" alt="" width="300" hight="200"><br>
             ↑ dilation処理をかけた画像<br>
-            <img src="./image/blob.png" alt="" width="300" hight="200"><br>
+            <img src="./stylesheet/image/blob.png" alt="" width="300" hight="200"><br>
             ↑ dilation処理をかけた画像に矩形認識を施した画像<br>
             </p>
             <h4>一文字ずつ抽出する</h4>
             <p>単語単位で1文字ずつ抽出し、語尾に空白挿入処理 (後述) をする。<br>
             OpenCV4から同梱の "EAST" モデルライブラリを使用。<br>
             </p>
-            <img src="./image/i_word_company.png" alt="" width="150" hight="150"><br>
+            <img src="./stylesheet/image/i_word_company.png" alt="" width="150" hight="150"><br>
 
 
             <h4 id="integrate">５. "i" の分割を統合</h4>
@@ -228,7 +228,7 @@
                     if i > 0:
                         md = x_region[i-1] # 1文字前の中点
                         if x < md < right_corner:
-                            del_pt.append(i)
+							del_pt.append(i)
 
                 if del_pt:
                     for dl in reversed(del_pt): 
@@ -256,10 +256,10 @@
 
             </pre>
             <p>
-                <img src="./image/i_top.png" alt="" width="50" hight="50">
-                <img src="./image/i_bottom.png" alt="" width="50" hight="50"><br>
+                <img src="./stylesheet/image/i_top.png" alt="" width="50" hight="50">
+                <img src="./stylesheet/image/i_bottom.png" alt="" width="50" hight="50"><br>
                 ↑ 別矩形として検出された "i" の画像<br>
-                <img src="./image/i.png" alt="" width="50" hight="50"><br>
+                <img src="./stylesheet/image/i.png" alt="" width="50" hight="50"><br>
                 ↑ 矩形を結合した "i" の画像<br>
     </p>
             <h4 id="insert">６. 空白挿入</h4>
